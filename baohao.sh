@@ -1,10 +1,11 @@
 #!/bin/bash
-
+# 根据自己的需求增加了IYUU推送到微信，并修改了一下参数的顺序。
 # 从命令行参数获取配置
 SERVERS_INFO="$1"
-TELEGRAM_BOT_TOKEN="$2"
-TELEGRAM_CHAT_ID="$3"
-KEYWORD="$4"
+IYUU_TOKEN="$2"
+TELEGRAM_BOT_TOKEN="$3"
+TELEGRAM_CHAT_ID="$4"
+KEYWORD="$5"
 
 # 初始化日志内容
 log=""
@@ -20,6 +21,13 @@ send_telegram_message() {
         -d "text=${message}" \
         -d "parse_mode=Markdown" >/dev/null 2>&1
 }
+        
+# 发送 IYUU 消息函数
+send_iyuu_message() {
+    local content="$1"
+    curl -s -X POST "https://iyuu.cn/${IYUU_TOKEN}.send" \
+        -d "text=${content}" >/dev/null 2>&1
+}       
 
 # 从 JSON 字符串解析服务器信息为数组
 servers=$(echo "$SERVERS_INFO" | jq -c '.[]')
@@ -74,3 +82,11 @@ fi
 
 # 发送汇总信息
 send_telegram_message "$summary"
+
+# 合并消息内容
+combined_message="${log}\n${summary}"
+    
+# 发送汇总信息到 IYUU
+# 一次性发送所有消息到 IYUU  
+# send_iyuu_message "$combined_message"
+send_iyuu_message "$summary"
